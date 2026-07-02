@@ -35,6 +35,14 @@ export const AudienceEnum = z.enum([
   "ALUNOS",
 ]);
 export const FollowUpStatusEnum = z.enum(["ABERTO", "EM_ANDAMENTO", "CONCLUIDO"]);
+export const EventTypeEnum = z.enum([
+  "PROVA",
+  "REUNIAO",
+  "FERIADO",
+  "ENTREGA",
+  "EVENTO",
+  "RECESSO",
+]);
 export const ReportScopeEnum = z.enum(["ESCOLA", "TURMA", "ALUNO"]);
 
 // ----------------------------------------------------------------------------
@@ -179,6 +187,17 @@ export const announcementSchema = z.object({
   classId: z.string().optional().or(z.literal("")),
 });
 
+export const eventSchema = z.object({
+  title: z.string().min(2, "Título obrigatório"),
+  description: z.string().optional().or(z.literal("")),
+  type: EventTypeEnum,
+  startsAt: z.string().min(1, "Informe a data de início"),
+  endsAt: z.string().optional().or(z.literal("")),
+  allDay: z.boolean().default(true),
+  audience: AudienceEnum,
+  classId: z.string().optional().or(z.literal("")),
+});
+
 export const occurrenceSchema = z.object({
   studentId: z.string().min(1, "Selecione o aluno"),
   type: OccurrenceTypeEnum,
@@ -240,4 +259,5 @@ export type ActivityInput = z.infer<typeof activitySchema>;
 export type AnnouncementInput = z.infer<typeof announcementSchema>;
 export type OccurrenceInput = z.infer<typeof occurrenceSchema>;
 export type FollowUpInput = z.infer<typeof followUpSchema>;
+export type EventInput = z.infer<typeof eventSchema>;
 export type SchoolReportInput = z.infer<typeof schoolReportSchema>;

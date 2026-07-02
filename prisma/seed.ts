@@ -25,6 +25,7 @@ async function main() {
   await prisma.schoolReport.deleteMany();
   await prisma.pedagogicalFollowUp.deleteMany();
   await prisma.occurrence.deleteMany();
+  await prisma.event.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.activity.deleteMany();
   await prisma.attendance.deleteMany();
@@ -303,6 +304,17 @@ async function main() {
       subjectId: subjectByName["Matemática"].id,
       teacherId: profUser.teacher!.id,
     },
+  });
+
+  console.log("📅 Criando eventos do calendário...");
+  await prisma.event.createMany({
+    data: [
+      { title: "Reunião de pais e mestres", type: "REUNIAO", startsAt: daysAgo(-6), allDay: true, audience: "TODOS", authorId: diretorUser.id },
+      { title: "Prova de Matemática — capítulo 4", type: "PROVA", startsAt: daysAgo(-10), allDay: true, audience: "ALUNOS", classId: classes[0].id, authorId: profUser.id },
+      { title: "Entrega do trabalho de Ciências", type: "ENTREGA", startsAt: daysAgo(-3), allDay: true, audience: "ALUNOS", classId: classes[0].id, authorId: profUser.id },
+      { title: "Conselho de classe", type: "REUNIAO", startsAt: daysAgo(-20), allDay: true, audience: "PROFESSORES", authorId: diretorUser.id },
+      { title: "Recesso escolar", type: "RECESSO", startsAt: daysAgo(-45), endsAt: daysAgo(-40), allDay: true, audience: "TODOS", authorId: diretorUser.id },
+    ],
   });
 
   console.log("✅ Seed concluído com sucesso!");

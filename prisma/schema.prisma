@@ -100,6 +100,15 @@ enum NotificationType {
   ATTENDANCE_RISK
 }
 
+enum EventType {
+  PROVA
+  REUNIAO
+  FERIADO
+  ENTREGA
+  EVENTO
+  RECESSO
+}
+
 // ----------------------------------------------------------------------------
 // Núcleo de identidade / autenticação
 // ----------------------------------------------------------------------------
@@ -126,6 +135,7 @@ model User {
   reports             SchoolReport[]        @relation("ReportAuthor")
   aiInteractions      AiInteraction[]
   auditLogs           AuditLog[]
+  events              Event[]               @relation("EventAuthor")
 
   @@index([role])
 }
@@ -201,6 +211,7 @@ model Class {
   assignments   TeachingAssignment[]
   activities    Activity[]
   announcements Announcement[]
+  events        Event[]
 
   @@unique([name, year])
 }
@@ -405,6 +416,29 @@ model Notification {
   @@unique([guardianId, studentId, type, title])
   @@index([guardianId, readAt])
   @@index([studentId])
+}
+
+// ----------------------------------------------------------------------------
+// Calendário / Eventos
+// ----------------------------------------------------------------------------
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  type        EventType @default(EVENTO)
+  startsAt    DateTime
+  endsAt      DateTime?
+  allDay      Boolean   @default(true)
+  audience    Audience  @default(TODOS)
+  classId     String? // null = evento geral da escola
+  class       Class?    @relation(fields: [classId], references: [id], onDelete: SetNull)
+  authorId    String
+  author      User      @relation("EventAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@index([startsAt])
+  @@index([classId])
 }
 
 // ----------------------------------------------------------------------------
