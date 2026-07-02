@@ -5,6 +5,7 @@
   "description": "Plataforma de gestão escolar inteligente com agentes de IA",
   "scripts": {
     "dev": "next dev",
+    "postinstall": "prisma generate",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
