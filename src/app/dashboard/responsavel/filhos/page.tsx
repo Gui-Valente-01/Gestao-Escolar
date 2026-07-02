@@ -1,3 +1,4 @@
+import { FileDown } from "lucide-react";
 import { requireRole, getCurrentProfile } from "@/lib/auth";
 import { getGuardianStudents, getStudentContext } from "@/services/student.service";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -29,6 +30,12 @@ export default async function FilhosPage() {
               <div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white">{student.user.name}</h2>
                 <p className="text-sm text-slate-400">{student.class?.name ?? "Sem turma"} · Matrícula {student.registration}</p>
+                <a
+                  href={`/api/boletim/${student.id}`}
+                  className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+                >
+                  <FileDown className="h-3.5 w-3.5" /> Baixar boletim (PDF)
+                </a>
               </div>
               <div className="flex gap-3 text-center">
                 <div>

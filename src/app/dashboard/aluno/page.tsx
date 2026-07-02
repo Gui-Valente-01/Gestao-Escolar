@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Sparkles, FileDown } from "lucide-react";
 import { requireRole, getCurrentProfile } from "@/lib/auth";
 import { getStudentContext, getStudentActivities } from "@/services/student.service";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -32,9 +32,17 @@ export default async function StudentDashboard() {
         title={`Olá, ${student.user.name.split(" ")[0]}!`}
         subtitle={`Turma: ${student.class?.name ?? "Sem turma"} · Matrícula ${student.registration}`}
         action={
-          <Link href="/dashboard/ia" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700">
-            <Sparkles className="h-4 w-4" /> Tutor IA
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`/api/boletim/${profile.studentId}`}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+            >
+              <FileDown className="h-4 w-4" /> Baixar boletim
+            </a>
+            <Link href="/dashboard/ia" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-700">
+              <Sparkles className="h-4 w-4" /> Tutor IA
+            </Link>
+          </div>
         }
       />
 
