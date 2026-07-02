@@ -97,6 +97,7 @@ const NAV_COMMON: NavItem[] = [
 
 const NAV_IA: NavItem = { label: "Assistente IA", href: "/dashboard/ia", icon: "Sparkles" };
 const NAV_CALENDAR: NavItem = { label: "Calendário", href: "/dashboard/calendario", icon: "CalendarDays" };
+const NAV_MESSAGES: NavItem = { label: "Mensagens", href: "/dashboard/mensagens", icon: "MessageSquare" };
 
 export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ADMIN: [
@@ -110,6 +111,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Disciplinas", href: "/dashboard/admin/disciplinas", icon: "BookOpen" },
     { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
   DIRETOR: [
@@ -117,6 +119,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Painel do diretor", href: "/dashboard/diretor", icon: "BarChart3" },
     { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
   PEDAGOGA: [
@@ -124,6 +127,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Painel pedagógico", href: "/dashboard/pedagoga", icon: "HeartHandshake" },
     { label: "Acompanhamentos", href: "/dashboard/pedagoga/acompanhamentos", icon: "ClipboardList" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
   PROFESSOR: [
@@ -133,6 +137,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Frequência", href: "/dashboard/professor/frequencia", icon: "CalendarCheck" },
     { label: "Atividades", href: "/dashboard/professor/atividades", icon: "FileText" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
   ALUNO: [
@@ -141,6 +146,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Minhas notas", href: "/dashboard/aluno/notas", icon: "Star" },
     { label: "Minhas faltas", href: "/dashboard/aluno/faltas", icon: "CalendarX" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
   RESPONSAVEL: [
@@ -148,6 +154,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Painel da família", href: "/dashboard/responsavel", icon: "Home" },
     { label: "Meus filhos", href: "/dashboard/responsavel/filhos", icon: "Users" },
     NAV_CALENDAR,
+    NAV_MESSAGES,
     NAV_IA,
   ],
 };

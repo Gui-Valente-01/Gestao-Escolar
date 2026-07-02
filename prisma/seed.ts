@@ -317,6 +317,15 @@ async function main() {
     ],
   });
 
+  console.log("💬 Criando mensagens de exemplo...");
+  await prisma.message.createMany({
+    data: [
+      { senderId: guardians[0].id, recipientId: profUser.id, body: "Boa tarde, professor! Como está o desempenho da Ana em Matemática?", createdAt: daysAgo(2) },
+      { senderId: profUser.id, recipientId: guardians[0].id, body: "Boa tarde! A Ana vai muito bem, está entre as melhores da turma. Parabéns!", createdAt: daysAgo(2), readAt: daysAgo(1) },
+      { senderId: pedagogaUser.id, recipientId: guardians[1].id, body: "Olá! Gostaria de agendar uma conversa sobre o acompanhamento do Caio.", createdAt: daysAgo(1) },
+    ],
+  });
+
   console.log("✅ Seed concluído com sucesso!");
   console.log("\n🔑 Credenciais de acesso (senha para todos): " + PASSWORD);
   console.log("   Admin .......... admin@edugestao.com");

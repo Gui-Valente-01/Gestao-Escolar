@@ -136,6 +136,8 @@ model User {
   aiInteractions      AiInteraction[]
   auditLogs           AuditLog[]
   events              Event[]               @relation("EventAuthor")
+  messagesSent        Message[]             @relation("MessageSender")
+  messagesReceived    Message[]             @relation("MessageRecipient")
 
   @@index([role])
 }
@@ -439,6 +441,25 @@ model Event {
 
   @@index([startsAt])
   @@index([classId])
+}
+
+// ----------------------------------------------------------------------------
+// Mensagens internas
+// ----------------------------------------------------------------------------
+
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User      @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  body        String    @db.Text
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([recipientId, readAt])
+  @@index([senderId])
+  @@index([createdAt])
 }
 
 // ----------------------------------------------------------------------------

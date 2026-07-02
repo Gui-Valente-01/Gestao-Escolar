@@ -217,6 +217,11 @@ export const followUpSchema = z.object({
 // IA
 // ----------------------------------------------------------------------------
 
+export const messageSchema = z.object({
+  recipientId: z.string().min(1, "Selecione o destinatário"),
+  body: z.string().min(1, "Escreva uma mensagem").max(4000, "Mensagem muito longa"),
+});
+
 export const aiAskSchema = z.object({
   message: z.string().min(2, "Escreva uma pergunta"),
   studentId: z.string().optional().or(z.literal("")),
