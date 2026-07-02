@@ -15,6 +15,8 @@ function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [serverError, setServerError] = useState<string | null>(null);
+  // Mantém o botão travado durante o redirecionamento (evita cliques repetidos)
+  const [redirecting, setRedirecting] = useState(false);
 
   const {
     register,
@@ -22,20 +24,29 @@ function LoginContent() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
+  const busy = isSubmitting || redirecting;
+
   async function onSubmit(values: LoginInput) {
+    if (busy) return;
     setServerError(null);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      setServerError(data.error || "Não foi possível entrar.");
-      return;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setServerError(data.error || "Não foi possível entrar.");
+        return;
+      }
+      // Sucesso: trava o botão e navega (o componente desmonta ao redirecionar)
+      setRedirecting(true);
+      router.push(params.get("from") || data.redirect || "/dashboard");
+      router.refresh();
+    } catch {
+      setServerError("Falha de conexão. Verifique sua internet e tente novamente.");
     }
-    router.push(params.get("from") || data.redirect || "/dashboard");
-    router.refresh();
   }
 
   return (
@@ -117,8 +128,8 @@ function LoginContent() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" size="lg" loading={isSubmitting}>
-                Entrar
+              <Button type="submit" className="w-full" size="lg" loading={busy}>
+                {busy ? "Entrando..." : "Entrar"}
               </Button>
             </form>
 

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[auth.login] banco indisponivel:", err);
     return NextResponse.json(
-      { ok: false, error: "Banco de dados indisponível. Verifique se o PostgreSQL está em execução." },
+      { ok: false, error: "Banco de dados indisponível. Tente novamente em instantes." },
       { status: 503 },
     );
   }
@@ -55,7 +55,8 @@ export async function POST(req: Request) {
   }
 
   await createSession({ id: user.id, name: user.name, email: user.email, role: user.role });
-  await logAction({ userId: user.id, action: "auth.login", entity: "User", entityId: user.id });
+  // Log de auditoria em segundo plano — não bloqueia a resposta do login
+  void logAction({ userId: user.id, action: "auth.login", entity: "User", entityId: user.id });
 
   return NextResponse.json({ ok: true, redirect: ROLE_HOME[user.role] });
 }
