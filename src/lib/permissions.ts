@@ -1,0 +1,144 @@
+import type { Role } from "@prisma/client";
+import type { NavItem } from "@/types";
+
+// ----------------------------------------------------------------------------
+// Rótulos e identidade visual de cada perfil
+// ----------------------------------------------------------------------------
+
+export const ROLE_LABELS: Record<Role, string> = {
+  ADMIN: "Administrador",
+  DIRETOR: "Diretor",
+  PEDAGOGA: "Pedagoga",
+  PROFESSOR: "Professor",
+  ALUNO: "Aluno",
+  RESPONSAVEL: "Responsável",
+};
+
+export const ROLE_BADGE: Record<Role, string> = {
+  ADMIN: "bg-violet-500/15 text-violet-500",
+  DIRETOR: "bg-brand-500/15 text-brand-500",
+  PEDAGOGA: "bg-emerald-500/15 text-emerald-500",
+  PROFESSOR: "bg-amber-500/15 text-amber-600",
+  ALUNO: "bg-sky-500/15 text-sky-500",
+  RESPONSAVEL: "bg-rose-500/15 text-rose-500",
+};
+
+export const ALL_ROLES: Role[] = [
+  "ADMIN",
+  "DIRETOR",
+  "PEDAGOGA",
+  "PROFESSOR",
+  "ALUNO",
+  "RESPONSAVEL",
+];
+
+// ----------------------------------------------------------------------------
+// Página inicial (home) de cada perfil após o login
+// ----------------------------------------------------------------------------
+
+export const ROLE_HOME: Record<Role, string> = {
+  ADMIN: "/dashboard/admin",
+  DIRETOR: "/dashboard/diretor",
+  PEDAGOGA: "/dashboard/pedagoga",
+  PROFESSOR: "/dashboard/professor",
+  ALUNO: "/dashboard/aluno",
+  RESPONSAVEL: "/dashboard/responsavel",
+};
+
+// ----------------------------------------------------------------------------
+// Controle de acesso por prefixo de rota
+// Cada entrada define quais roles podem acessar aquele ramo do dashboard.
+// ----------------------------------------------------------------------------
+
+const ROUTE_RULES: { prefix: string; roles: Role[] }[] = [
+  { prefix: "/dashboard/admin", roles: ["ADMIN"] },
+  { prefix: "/dashboard/diretor", roles: ["ADMIN", "DIRETOR"] },
+  { prefix: "/dashboard/pedagoga", roles: ["ADMIN", "DIRETOR", "PEDAGOGA"] },
+  { prefix: "/dashboard/professor", roles: ["ADMIN", "PROFESSOR"] },
+  { prefix: "/dashboard/aluno", roles: ["ADMIN", "ALUNO"] },
+  { prefix: "/dashboard/responsavel", roles: ["ADMIN", "RESPONSAVEL"] },
+  // /dashboard e /dashboard/ia são liberados para qualquer usuário autenticado
+];
+
+/** Verifica se a role pode acessar a rota informada. */
+export function canAccessRoute(role: Role, pathname: string): boolean {
+  const rule = ROUTE_RULES.find((r) => pathname.startsWith(r.prefix));
+  if (!rule) return true; // rotas genéricas do dashboard
+  return rule.roles.includes(role);
+}
+
+// ----------------------------------------------------------------------------
+// Permissões granulares (usadas em Server Actions e componentes)
+// ----------------------------------------------------------------------------
+
+export const PERMISSIONS = {
+  manageUsers: (r: Role) => r === "ADMIN",
+  manageAcademic: (r: Role) => r === "ADMIN", // turmas, disciplinas, vínculos
+  viewSchoolReports: (r: Role) => r === "ADMIN" || r === "DIRETOR",
+  manageSchoolReports: (r: Role) => r === "ADMIN" || r === "DIRETOR",
+  managePedagogy: (r: Role) => r === "ADMIN" || r === "PEDAGOGA",
+  launchGrades: (r: Role) => r === "ADMIN" || r === "PROFESSOR",
+  createAnnouncements: (r: Role) =>
+    ["ADMIN", "DIRETOR", "PEDAGOGA", "PROFESSOR"].includes(r),
+  registerOccurrences: (r: Role) =>
+    ["ADMIN", "DIRETOR", "PEDAGOGA", "PROFESSOR"].includes(r),
+} as const;
+
+// ----------------------------------------------------------------------------
+// Navegação dinâmica da sidebar por perfil
+// ----------------------------------------------------------------------------
+
+const NAV_COMMON: NavItem[] = [
+  { label: "Visão geral", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "Meu perfil", href: "/dashboard/perfil", icon: "UserCog" },
+];
+
+const NAV_IA: NavItem = { label: "Assistente IA", href: "/dashboard/ia", icon: "Sparkles" };
+
+export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
+  ADMIN: [
+    ...NAV_COMMON,
+    { label: "Painel admin", href: "/dashboard/admin", icon: "ShieldCheck" },
+    { label: "Usuários", href: "/dashboard/admin/usuarios", icon: "Users" },
+    { label: "Alunos", href: "/dashboard/admin/alunos", icon: "GraduationCap" },
+    { label: "Professores", href: "/dashboard/admin/professores", icon: "Presentation" },
+    { label: "Responsáveis", href: "/dashboard/admin/responsaveis", icon: "UserRound" },
+    { label: "Turmas", href: "/dashboard/admin/turmas", icon: "School" },
+    { label: "Disciplinas", href: "/dashboard/admin/disciplinas", icon: "BookOpen" },
+    { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
+    NAV_IA,
+  ],
+  DIRETOR: [
+    ...NAV_COMMON,
+    { label: "Painel do diretor", href: "/dashboard/diretor", icon: "BarChart3" },
+    { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
+    NAV_IA,
+  ],
+  PEDAGOGA: [
+    ...NAV_COMMON,
+    { label: "Painel pedagógico", href: "/dashboard/pedagoga", icon: "HeartHandshake" },
+    { label: "Acompanhamentos", href: "/dashboard/pedagoga/acompanhamentos", icon: "ClipboardList" },
+    NAV_IA,
+  ],
+  PROFESSOR: [
+    ...NAV_COMMON,
+    { label: "Painel do professor", href: "/dashboard/professor", icon: "Presentation" },
+    { label: "Notas", href: "/dashboard/professor/notas", icon: "PencilLine" },
+    { label: "Frequência", href: "/dashboard/professor/frequencia", icon: "CalendarCheck" },
+    { label: "Atividades", href: "/dashboard/professor/atividades", icon: "FileText" },
+    NAV_IA,
+  ],
+  ALUNO: [
+    ...NAV_COMMON,
+    { label: "Meu painel", href: "/dashboard/aluno", icon: "GraduationCap" },
+    { label: "Minhas notas", href: "/dashboard/aluno/notas", icon: "Star" },
+    { label: "Minhas faltas", href: "/dashboard/aluno/faltas", icon: "CalendarX" },
+    NAV_IA,
+  ],
+  RESPONSAVEL: [
+    ...NAV_COMMON,
+    { label: "Painel da família", href: "/dashboard/responsavel", icon: "Home" },
+    { label: "Meus filhos", href: "/dashboard/responsavel/filhos", icon: "Users" },
+    NAV_IA,
+  ],
+};

@@ -1,0 +1,426 @@
+// EduGestão IA — Schema do banco de dados
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  DIRETOR
+  PEDAGOGA
+  PROFESSOR
+  ALUNO
+  RESPONSAVEL
+}
+
+enum Shift {
+  MANHA
+  TARDE
+  NOITE
+  INTEGRAL
+}
+
+enum Term {
+  PRIMEIRO
+  SEGUNDO
+  TERCEIRO
+  QUARTO
+}
+
+enum EnrollmentStatus {
+  ATIVA
+  TRANCADA
+  CONCLUIDA
+  TRANSFERIDA
+}
+
+enum ActivityType {
+  TAREFA
+  PROVA
+  TRABALHO
+  RECUPERACAO
+  PLANO_AULA
+}
+
+enum Audience {
+  TODOS
+  TURMA
+  PROFESSORES
+  RESPONSAVEIS
+  ALUNOS
+}
+
+enum OccurrenceType {
+  COMPORTAMENTO
+  ATRASO
+  FALTA_GRAVE
+  ELOGIO
+  SAUDE
+  OUTRO
+}
+
+enum Severity {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum FollowUpStatus {
+  ABERTO
+  EM_ANDAMENTO
+  CONCLUIDO
+}
+
+enum AgentType {
+  GESTOR // Diretor
+  PEDAGOGICO // Pedagoga
+  PROFESSOR // Professor
+  TUTOR // Aluno
+  FAMILIAR // Responsável
+}
+
+enum ReportScope {
+  ESCOLA
+  TURMA
+  ALUNO
+}
+
+enum NotificationType {
+  GRADE_RISK
+  ATTENDANCE_RISK
+}
+
+// ----------------------------------------------------------------------------
+// Núcleo de identidade / autenticação
+// ----------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ALUNO)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Perfis (1-1) de acordo com a role
+  teacher  Teacher?
+  student  Student?
+  guardian Guardian?
+
+  // Ações registradas por este usuário
+  announcements       Announcement[]        @relation("AnnouncementAuthor")
+  occurrencesReported Occurrence[]          @relation("OccurrenceReporter")
+  followUps           PedagogicalFollowUp[] @relation("FollowUpAuthor")
+  reports             SchoolReport[]        @relation("ReportAuthor")
+  aiInteractions      AiInteraction[]
+  auditLogs           AuditLog[]
+
+  @@index([role])
+}
+
+// ----------------------------------------------------------------------------
+// Perfis de domínio
+// ----------------------------------------------------------------------------
+
+model Teacher {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registration String?   @unique // matrícula funcional
+  phone        String?
+  hiredAt      DateTime?
+
+  assignments TeachingAssignment[]
+  grades      Grade[]
+  attendances Attendance[]
+  activities  Activity[]
+}
+
+model Guardian {
+  id     String  @id @default(cuid())
+  userId String  @unique
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone  String?
+  cpf    String? @unique
+
+  // Um responsável pode ter vários alunos
+  students      Student[]
+  notifications Notification[]
+}
+
+model Student {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registration String    @unique // matrícula do aluno
+  birthDate    DateTime?
+
+  // Um aluno pertence a uma turma
+  classId String?
+  class   Class?  @relation(fields: [classId], references: [id], onDelete: SetNull)
+
+  // Um aluno pode ter um responsável principal
+  guardianId String?
+  guardian   Guardian? @relation(fields: [guardianId], references: [id], onDelete: SetNull)
+
+  enrollments Enrollment[]
+  grades      Grade[]
+  attendances Attendance[]
+  occurrences Occurrence[]
+  followUps   PedagogicalFollowUp[]
+  notifications Notification[]
+
+  @@index([classId])
+  @@index([guardianId])
+}
+
+// ----------------------------------------------------------------------------
+// Estrutura acadêmica
+// ----------------------------------------------------------------------------
+
+model Class {
+  id    String @id @default(cuid())
+  name  String // ex: "9º Ano A"
+  year  Int
+  shift Shift  @default(MANHA)
+
+  students      Student[]
+  enrollments   Enrollment[]
+  assignments   TeachingAssignment[]
+  activities    Activity[]
+  announcements Announcement[]
+
+  @@unique([name, year])
+}
+
+model Subject {
+  id       String  @id @default(cuid())
+  name     String  @unique // ex: "Matemática"
+  code     String? @unique
+  workload Int? // carga horária
+
+  assignments TeachingAssignment[]
+  grades      Grade[]
+  attendances Attendance[]
+  activities  Activity[]
+}
+
+// Vínculo professor <-> disciplina <-> turma
+model TeachingAssignment {
+  id        String  @id @default(cuid())
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  classId   String
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teacherId, subjectId, classId])
+  @@index([subjectId])
+  @@index([classId])
+}
+
+// Matrícula do aluno em uma turma por ano letivo
+model Enrollment {
+  id         String           @id @default(cuid())
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId    String
+  class      Class            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  year       Int
+  status     EnrollmentStatus @default(ATIVA)
+  enrolledAt DateTime         @default(now())
+
+  @@unique([studentId, classId, year])
+  @@index([classId])
+}
+
+// ----------------------------------------------------------------------------
+// Notas e frequência
+// ----------------------------------------------------------------------------
+
+model Grade {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacherId  String
+  teacher    Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  term       Term
+  year       Int
+  value      Float
+  assessment String? // ex: "Prova 1", "Trabalho"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([studentId, term, year])
+  @@index([subjectId])
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId String?
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+  date      DateTime
+  present   Boolean  @default(true)
+  justified Boolean  @default(false)
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([studentId, date])
+}
+
+// ----------------------------------------------------------------------------
+// Atividades, comunicados, ocorrências, acompanhamento
+// ----------------------------------------------------------------------------
+
+model Activity {
+  id          String       @id @default(cuid())
+  title       String
+  description String?      @db.Text
+  type        ActivityType @default(TAREFA)
+  dueDate     DateTime?
+  classId     String
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  teacherId   String
+  teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+
+  @@index([classId])
+  @@index([teacherId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  audience  Audience @default(TODOS)
+  authorId  String
+  author    User     @relation("AnnouncementAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  classId   String?
+  class     Class?   @relation(fields: [classId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([audience])
+  @@index([classId])
+}
+
+model Occurrence {
+  id           String         @id @default(cuid())
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reportedById String
+  reportedBy   User           @relation("OccurrenceReporter", fields: [reportedById], references: [id], onDelete: Cascade)
+  type         OccurrenceType @default(COMPORTAMENTO)
+  severity     Severity       @default(MEDIA)
+  description  String         @db.Text
+  date         DateTime       @default(now())
+  resolved     Boolean        @default(false)
+
+  @@index([studentId])
+}
+
+model PedagogicalFollowUp {
+  id        String         @id @default(cuid())
+  studentId String
+  student   Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User           @relation("FollowUpAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String         @db.Text // observação pedagógica
+  plan      String?        @db.Text // plano de apoio (pode ser gerado pela IA)
+  status    FollowUpStatus @default(ABERTO)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+// ----------------------------------------------------------------------------
+// IA e relatórios
+// ----------------------------------------------------------------------------
+
+model AiInteraction {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agent     AgentType
+  question  String    @db.Text
+  answer    String    @db.Text
+  model     String?
+  studentId String? // contexto opcional (aluno analisado)
+  createdAt DateTime  @default(now())
+
+  @@index([userId, agent])
+}
+
+model SchoolReport {
+  id        String      @id @default(cuid())
+  title     String
+  scope     ReportScope @default(ESCOLA)
+  period    String? // ex: "1º Bimestre 2026"
+  content   String      @db.Text
+  authorId  String
+  author    User        @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  classId   String? // referência opcional (snapshot)
+  studentId String? // referência opcional (snapshot)
+  createdAt DateTime    @default(now())
+
+  @@index([scope])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  guardianId String
+  guardian   Guardian         @relation(fields: [guardianId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type       NotificationType
+  title      String
+  message    String
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  @@unique([guardianId, studentId, type, title])
+  @@index([guardianId, readAt])
+  @@index([studentId])
+}
+
+// ----------------------------------------------------------------------------
+// Auditoria (LGPD / logs básicos)
+// ----------------------------------------------------------------------------
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String // ex: "user.create", "grade.update"
+  entity    String?
+  entityId  String?
+  metadata  String? @db.Text // JSON serializado
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+}

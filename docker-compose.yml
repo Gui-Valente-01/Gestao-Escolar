@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: edugestao_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: edugestao
+      MYSQL_USER: edugestao
+      MYSQL_PASSWORD: edugestao
+    ports:
+      - "3306:3306"
+    volumes:
+      - edugestao_mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Interface web opcional para inspecionar o banco (http://localhost:8080)
+  adminer:
+    image: adminer:latest
+    container_name: edugestao_adminer
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+
+volumes:
+  edugestao_mysqldata:

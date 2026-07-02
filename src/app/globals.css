@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-slate-200 dark:border-white/10;
+  }
+  body {
+    @apply bg-surface-light text-slate-800 antialiased dark:bg-surface-darker dark:text-slate-100;
+  }
+}
+
+@layer components {
+  /* Cartão padrão do sistema */
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-soft transition-colors dark:border-white/10 dark:bg-surface-dark;
+  }
+
+  /* Vidro fosco (sidebar/navbar) */
+  .glass {
+    @apply border border-white/10 bg-white/80 backdrop-blur-xl dark:bg-surface-dark/70;
+  }
+
+  /* Texto com gradiente de marca */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 via-indigo-500 to-violet-500 bg-clip-text text-transparent;
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:placeholder:text-slate-500;
+  }
+
+  /* Fundo decorativo da tela de login */
+  .auth-aurora {
+    background:
+      radial-gradient(60% 50% at 20% 10%, rgba(51, 102, 255, 0.25), transparent 60%),
+      radial-gradient(50% 50% at 90% 30%, rgba(139, 92, 246, 0.22), transparent 60%),
+      radial-gradient(60% 60% at 50% 100%, rgba(16, 185, 129, 0.18), transparent 60%);
+  }
+}
+
+/* Scrollbar discreta */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.55);
+  background-clip: content-box;
+}
