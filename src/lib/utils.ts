@@ -66,3 +66,8 @@ export function titleCase(text: string) {
 export function humanizeEnum(value: string) {
   return titleCase(value.replace(/_/g, " "));
 }
+
+/** Formata um valor numérico como moeda brasileira (R$). */
+export function formatCurrency(value: number) {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}

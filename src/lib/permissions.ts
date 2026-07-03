@@ -57,6 +57,7 @@ const ROUTE_RULES: { prefix: string; roles: Role[] }[] = [
   { prefix: "/dashboard/professor", roles: ["ADMIN", "PROFESSOR"] },
   { prefix: "/dashboard/aluno", roles: ["ADMIN", "ALUNO"] },
   { prefix: "/dashboard/responsavel", roles: ["ADMIN", "RESPONSAVEL"] },
+  { prefix: "/dashboard/financeiro", roles: ["ADMIN", "DIRETOR", "RESPONSAVEL"] },
   // /dashboard e /dashboard/ia são liberados para qualquer usuário autenticado
 ];
 
@@ -84,6 +85,7 @@ export const PERMISSIONS = {
     ["ADMIN", "DIRETOR", "PEDAGOGA", "PROFESSOR"].includes(r),
   manageEvents: (r: Role) =>
     ["ADMIN", "DIRETOR", "PEDAGOGA", "PROFESSOR"].includes(r),
+  manageFinance: (r: Role) => r === "ADMIN" || r === "DIRETOR",
 } as const;
 
 // ----------------------------------------------------------------------------
@@ -98,6 +100,7 @@ const NAV_COMMON: NavItem[] = [
 const NAV_IA: NavItem = { label: "Assistente IA", href: "/dashboard/ia", icon: "Sparkles" };
 const NAV_CALENDAR: NavItem = { label: "Calendário", href: "/dashboard/calendario", icon: "CalendarDays" };
 const NAV_MESSAGES: NavItem = { label: "Mensagens", href: "/dashboard/mensagens", icon: "MessageSquare" };
+const NAV_FINANCE: NavItem = { label: "Financeiro", href: "/dashboard/financeiro", icon: "Wallet" };
 
 export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ADMIN: [
@@ -110,6 +113,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { label: "Turmas", href: "/dashboard/admin/turmas", icon: "School" },
     { label: "Disciplinas", href: "/dashboard/admin/disciplinas", icon: "BookOpen" },
     { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
+    NAV_FINANCE,
     NAV_CALENDAR,
     NAV_MESSAGES,
     NAV_IA,
@@ -118,6 +122,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     ...NAV_COMMON,
     { label: "Painel do diretor", href: "/dashboard/diretor", icon: "BarChart3" },
     { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
+    NAV_FINANCE,
     NAV_CALENDAR,
     NAV_MESSAGES,
     NAV_IA,
@@ -153,6 +158,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     ...NAV_COMMON,
     { label: "Painel da família", href: "/dashboard/responsavel", icon: "Home" },
     { label: "Meus filhos", href: "/dashboard/responsavel/filhos", icon: "Users" },
+    NAV_FINANCE,
     NAV_CALENDAR,
     NAV_MESSAGES,
     NAV_IA,

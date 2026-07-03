@@ -217,6 +217,16 @@ export const followUpSchema = z.object({
 // IA
 // ----------------------------------------------------------------------------
 
+export const InvoiceStatusEnum = z.enum(["PENDENTE", "PAGO", "ATRASADO", "CANCELADO"]);
+
+export const invoiceSchema = z.object({
+  studentId: z.string().min(1, "Selecione o aluno"),
+  description: z.string().min(2, "Descrição obrigatória"),
+  amount: z.coerce.number().positive("Valor deve ser maior que zero"),
+  dueDate: z.string().min(1, "Informe o vencimento"),
+  status: InvoiceStatusEnum.default("PENDENTE"),
+});
+
 export const messageSchema = z.object({
   recipientId: z.string().min(1, "Selecione o destinatário"),
   body: z.string().min(1, "Escreva uma mensagem").max(4000, "Mensagem muito longa"),
@@ -265,4 +275,5 @@ export type AnnouncementInput = z.infer<typeof announcementSchema>;
 export type OccurrenceInput = z.infer<typeof occurrenceSchema>;
 export type FollowUpInput = z.infer<typeof followUpSchema>;
 export type EventInput = z.infer<typeof eventSchema>;
+export type InvoiceInput = z.infer<typeof invoiceSchema>;
 export type SchoolReportInput = z.infer<typeof schoolReportSchema>;

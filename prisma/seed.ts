@@ -326,6 +326,15 @@ async function main() {
     ],
   });
 
+  console.log("💰 Criando mensalidades de exemplo...");
+  const adminUser = await prisma.user.findUniqueOrThrow({ where: { email: "admin@edugestao.com" } });
+  const someStudents = await prisma.student.findMany({ orderBy: { registration: "asc" } });
+  const invoiceData = someStudents.flatMap((st, idx) => [
+    { studentId: st.id, description: "Mensalidade — mês anterior", amount: 450, dueDate: daysAgo(20), status: "PAGO" as const, paidAt: daysAgo(18), createdById: adminUser.id },
+    { studentId: st.id, description: "Mensalidade — mês atual", amount: 450, dueDate: idx % 3 === 0 ? daysAgo(4) : daysAgo(-12), status: "PENDENTE" as const, createdById: adminUser.id },
+  ]);
+  await prisma.invoice.createMany({ data: invoiceData });
+
   console.log("✅ Seed concluído com sucesso!");
   console.log("\n🔑 Credenciais de acesso (senha para todos): " + PASSWORD);
   console.log("   Admin .......... admin@edugestao.com");

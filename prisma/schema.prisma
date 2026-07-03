@@ -109,6 +109,13 @@ enum EventType {
   RECESSO
 }
 
+enum InvoiceStatus {
+  PENDENTE
+  PAGO
+  ATRASADO
+  CANCELADO
+}
+
 // ----------------------------------------------------------------------------
 // Núcleo de identidade / autenticação
 // ----------------------------------------------------------------------------
@@ -138,6 +145,7 @@ model User {
   events              Event[]               @relation("EventAuthor")
   messagesSent        Message[]             @relation("MessageSender")
   messagesReceived    Message[]             @relation("MessageRecipient")
+  invoicesCreated     Invoice[]             @relation("InvoiceCreator")
 
   @@index([role])
 }
@@ -193,6 +201,7 @@ model Student {
   occurrences Occurrence[]
   followUps   PedagogicalFollowUp[]
   notifications Notification[]
+  invoices    Invoice[]
 
   @@index([classId])
   @@index([guardianId])
@@ -441,6 +450,28 @@ model Event {
 
   @@index([startsAt])
   @@index([classId])
+}
+
+// ----------------------------------------------------------------------------
+// Financeiro / Mensalidades
+// ----------------------------------------------------------------------------
+
+model Invoice {
+  id          String        @id @default(cuid())
+  studentId   String
+  student     Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  description String // ex: "Mensalidade Julho/2026"
+  amount      Float // valor em R$
+  dueDate     DateTime
+  status      InvoiceStatus @default(PENDENTE)
+  paidAt      DateTime?
+  createdById String
+  createdBy   User          @relation("InvoiceCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
 }
 
 // ----------------------------------------------------------------------------
