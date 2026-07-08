@@ -1,4 +1,4 @@
-import * as Icons from "lucide-react";
+import { ICONS } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
 type Tone = "brand" | "emerald" | "amber" | "red" | "violet" | "sky";
@@ -22,7 +22,7 @@ interface DashboardCardProps {
 
 export function DashboardCard({ label, value, hint, icon, tone = "brand" }: DashboardCardProps) {
   // Resolve dinamicamente o ícone lucide pelo nome
-  const Icon = (Icons[icon as keyof typeof Icons] ?? Icons.Activity) as Icons.LucideIcon;
+  const Icon = ICONS[icon as keyof typeof ICONS] ?? ICONS.Activity;
   return (
     <div className="card group p-5 transition hover:shadow-glow">
       <div className="flex items-start justify-between">

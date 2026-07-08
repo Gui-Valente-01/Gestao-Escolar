@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "EduGestão IA — Gestão escolar inteligente",
   description:
     "Plataforma de gestão escolar com agentes de inteligência artificial para administradores, diretores, pedagogas, professores, alunos e responsáveis.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

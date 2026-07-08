@@ -92,8 +92,7 @@ export const PERMISSIONS = {
 // Navegação dinâmica da sidebar por perfil
 // ----------------------------------------------------------------------------
 
-const NAV_COMMON: NavItem[] = [
-  { label: "Visão geral", href: "/dashboard", icon: "LayoutDashboard" },
+const NAV_PROFILE: NavItem[] = [
   { label: "Meu perfil", href: "/dashboard/perfil", icon: "UserCog" },
 ];
 
@@ -104,8 +103,8 @@ const NAV_FINANCE: NavItem = { label: "Financeiro", href: "/dashboard/financeiro
 
 export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   ADMIN: [
-    ...NAV_COMMON,
-    { label: "Painel admin", href: "/dashboard/admin", icon: "ShieldCheck" },
+    { label: "Visão geral", href: "/dashboard/admin", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Usuários", href: "/dashboard/admin/usuarios", icon: "Users" },
     { label: "Alunos", href: "/dashboard/admin/alunos", icon: "GraduationCap" },
     { label: "Professores", href: "/dashboard/admin/professores", icon: "Presentation" },
@@ -119,8 +118,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     NAV_IA,
   ],
   DIRETOR: [
-    ...NAV_COMMON,
-    { label: "Painel do diretor", href: "/dashboard/diretor", icon: "BarChart3" },
+    { label: "Visão geral", href: "/dashboard/diretor", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Relatórios IA", href: "/dashboard/diretor/relatorios", icon: "FileSearch" },
     NAV_FINANCE,
     NAV_CALENDAR,
@@ -128,8 +127,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     NAV_IA,
   ],
   PEDAGOGA: [
-    ...NAV_COMMON,
-    { label: "Painel pedagógico", href: "/dashboard/pedagoga", icon: "HeartHandshake" },
+    { label: "Visão geral", href: "/dashboard/pedagoga", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Fichas dos alunos", href: "/dashboard/pedagoga/alunos", icon: "UserRound" },
     { label: "Acompanhamentos", href: "/dashboard/pedagoga/acompanhamentos", icon: "ClipboardList" },
     NAV_CALENDAR,
@@ -137,8 +136,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     NAV_IA,
   ],
   PROFESSOR: [
-    ...NAV_COMMON,
-    { label: "Painel do professor", href: "/dashboard/professor", icon: "Presentation" },
+    { label: "Visão geral", href: "/dashboard/professor", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Meus alunos", href: "/dashboard/professor/alunos", icon: "Users" },
     { label: "Notas", href: "/dashboard/professor/notas", icon: "PencilLine" },
     { label: "Frequência", href: "/dashboard/professor/frequencia", icon: "CalendarCheck" },
@@ -148,8 +147,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     NAV_IA,
   ],
   ALUNO: [
-    ...NAV_COMMON,
-    { label: "Meu painel", href: "/dashboard/aluno", icon: "GraduationCap" },
+    { label: "Visão geral", href: "/dashboard/aluno", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Minhas notas", href: "/dashboard/aluno/notas", icon: "Star" },
     { label: "Minhas faltas", href: "/dashboard/aluno/faltas", icon: "CalendarX" },
     NAV_CALENDAR,
@@ -157,8 +156,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     NAV_IA,
   ],
   RESPONSAVEL: [
-    ...NAV_COMMON,
-    { label: "Painel da família", href: "/dashboard/responsavel", icon: "Home" },
+    { label: "Visão geral", href: "/dashboard/responsavel", icon: "LayoutDashboard" },
+    ...NAV_PROFILE,
     { label: "Meus filhos", href: "/dashboard/responsavel/filhos", icon: "Users" },
     NAV_FINANCE,
     NAV_CALENDAR,

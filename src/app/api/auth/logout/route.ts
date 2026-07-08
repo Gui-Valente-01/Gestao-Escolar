@@ -6,7 +6,7 @@ export async function POST() {
   const user = await getCurrentUser();
   destroySession();
   if (user) {
-    await logAction({ userId: user.id, action: "auth.logout", entity: "User", entityId: user.id });
+    void logAction({ userId: user.id, action: "auth.logout", entity: "User", entityId: user.id });
   }
   return NextResponse.json({ ok: true });
 }

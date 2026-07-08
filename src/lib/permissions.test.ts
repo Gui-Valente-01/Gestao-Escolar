@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canAccessRoute, PERMISSIONS, ROLE_HOME } from "./permissions";
+import { canAccessRoute, NAV_BY_ROLE, PERMISSIONS, ROLE_HOME } from "./permissions";
 
 describe("permissions", () => {
   it("libera rotas genericas do dashboard para usuario autenticado", () => {
@@ -21,5 +21,11 @@ describe("permissions", () => {
   it("mantem home por role", () => {
     expect(ROLE_HOME.ADMIN).toBe("/dashboard/admin");
     expect(ROLE_HOME.RESPONSAVEL).toBe("/dashboard/responsavel");
+  });
+
+  it("aponta a visao geral para o painel real de cada perfil", () => {
+    expect(NAV_BY_ROLE.ADMIN[0]).toMatchObject({ label: "Visão geral", href: ROLE_HOME.ADMIN });
+    expect(NAV_BY_ROLE.PROFESSOR[0]).toMatchObject({ label: "Visão geral", href: ROLE_HOME.PROFESSOR });
+    expect(Object.values(NAV_BY_ROLE).flat().some((item) => item.href === "/dashboard")).toBe(false);
   });
 });
