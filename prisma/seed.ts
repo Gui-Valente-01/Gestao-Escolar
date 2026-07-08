@@ -335,6 +335,47 @@ async function main() {
   ]);
   await prisma.invoice.createMany({ data: invoiceData });
 
+  console.log("🧩 Criando laudos, anotações de desenvolvimento e atividade adaptada...");
+  const caio = await prisma.student.findFirst({ where: { user: { name: "Caio Batista" } } });
+  if (caio) {
+    await prisma.studentSupportNeed.create({
+      data: {
+        studentId: caio.id,
+        type: "TDAH",
+        description: "Laudo de TDAH apresentado pela família.",
+        observations: "Tempo estendido em avaliações; sentar próximo ao professor; instruções curtas.",
+        active: true,
+        createdById: pedagogaUser.id,
+      },
+    });
+    await prisma.studentDevelopmentNote.create({
+      data: {
+        studentId: caio.id,
+        authorId: profUser.id,
+        content: "Demonstrou melhora de foco nas últimas semanas com apoio individualizado em Matemática.",
+      },
+    });
+  }
+
+  await prisma.activity.create({
+    data: {
+      title: "Atividade adaptada — Frações (apoio)",
+      description: "Versão com material ampliado e passo a passo detalhado.",
+      type: "RECUPERACAO",
+      classId: classes[0].id,
+      subjectId: subjectByName["Matemática"].id,
+      teacherId: profUser.teacher!.id,
+      adapted: true,
+      adaptationNotes: "Tempo estendido, material ampliado e apoio de mediador.",
+      attachments: {
+        create: [
+          { type: "PDF", title: "Lista adaptada (PDF)", url: "https://example.com/lista-adaptada.pdf" },
+          { type: "VIDEO", title: "Vídeo explicativo de frações", url: "https://www.youtube.com/watch?v=exemplo" },
+        ],
+      },
+    },
+  });
+
   console.log("✅ Seed concluído com sucesso!");
   console.log("\n🔑 Credenciais de acesso (senha para todos): " + PASSWORD);
   console.log("   Admin .......... admin@edugestao.com");

@@ -83,3 +83,23 @@ export async function notifyAttendanceRisk(studentId: string, year = currentYear
 export async function notifyAttendanceRiskForStudents(studentIds: string[], year = currentYear()) {
   await Promise.all(studentIds.map((studentId) => notifyAttendanceRisk(studentId, year)));
 }
+
+/** Cria uma notificação para o responsável quando uma ocorrência é registrada. */
+export async function notifyOccurrence(studentId: string, summary: string) {
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    include: { user: { select: { name: true } } },
+  });
+  if (!student?.guardianId) return null;
+
+  return prisma.notification.create({
+    data: {
+      guardianId: student.guardianId,
+      studentId,
+      type: "OCCURRENCE",
+      // título com timestamp garante unicidade (cada ocorrência gera um aviso novo)
+      title: `Nova ocorrência — ${new Date().toLocaleString("pt-BR")}`,
+      message: `Foi registrada uma ocorrência para ${student.user.name}: ${summary}`,
+    },
+  });
+}

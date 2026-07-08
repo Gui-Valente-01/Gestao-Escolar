@@ -98,6 +98,28 @@ enum ReportScope {
 enum NotificationType {
   GRADE_RISK
   ATTENDANCE_RISK
+  OCCURRENCE
+}
+
+enum SupportNeedType {
+  TDAH
+  TEA // Transtorno do Espectro Autista
+  DISLEXIA
+  DISCALCULIA
+  DEFICIENCIA_INTELECTUAL
+  DEFICIENCIA_FISICA
+  DEFICIENCIA_VISUAL
+  DEFICIENCIA_AUDITIVA
+  ALTAS_HABILIDADES
+  TRANSTORNO_APRENDIZAGEM
+  OUTRO
+}
+
+enum AttachmentType {
+  LINK
+  IMAGE
+  VIDEO
+  PDF
 }
 
 enum EventType {
@@ -146,6 +168,8 @@ model User {
   messagesSent        Message[]             @relation("MessageSender")
   messagesReceived    Message[]             @relation("MessageRecipient")
   invoicesCreated     Invoice[]             @relation("InvoiceCreator")
+  supportNeedsCreated StudentSupportNeed[]  @relation("SupportNeedAuthor")
+  developmentNotes    StudentDevelopmentNote[] @relation("DevNoteAuthor")
 
   @@index([role])
 }
@@ -202,6 +226,8 @@ model Student {
   followUps   PedagogicalFollowUp[]
   notifications Notification[]
   invoices    Invoice[]
+  supportNeeds     StudentSupportNeed[]
+  developmentNotes StudentDevelopmentNote[]
 
   @@index([classId])
   @@index([guardianId])
@@ -316,21 +342,37 @@ model Attendance {
 // ----------------------------------------------------------------------------
 
 model Activity {
-  id          String       @id @default(cuid())
-  title       String
-  description String?      @db.Text
-  type        ActivityType @default(TAREFA)
-  dueDate     DateTime?
-  classId     String
-  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subjectId   String?
-  subject     Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  teacherId   String
-  teacher     Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  createdAt   DateTime     @default(now())
+  id              String       @id @default(cuid())
+  title           String
+  description     String?      @db.Text
+  type            ActivityType @default(TAREFA)
+  dueDate         DateTime?
+  classId         String
+  class           Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId       String?
+  subject         Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  teacherId       String
+  teacher         Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  adapted         Boolean      @default(false) // atividade adaptada para alunos com necessidades especiais
+  adaptationNotes String?      @db.Text
+  createdAt       DateTime     @default(now())
+
+  attachments ActivityAttachment[]
 
   @@index([classId])
   @@index([teacherId])
+}
+
+model ActivityAttachment {
+  id         String         @id @default(cuid())
+  activityId String
+  activity   Activity       @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  type       AttachmentType @default(LINK)
+  title      String?
+  url        String         @db.Text
+  createdAt  DateTime       @default(now())
+
+  @@index([activityId])
 }
 
 model Announcement {
@@ -375,6 +417,37 @@ model PedagogicalFollowUp {
   status    FollowUpStatus @default(ABERTO)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+// Laudo / necessidade especial do aluno (inclusão)
+model StudentSupportNeed {
+  id           String          @id @default(cuid())
+  studentId    String
+  student      Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type         SupportNeedType
+  description  String          @db.Text // resumo do laudo / necessidade
+  observations String?         @db.Text // recomendações de apoio
+  documentUrl  String? // link para o laudo (opcional)
+  active       Boolean         @default(true)
+  createdById  String
+  createdBy    User            @relation("SupportNeedAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([studentId])
+}
+
+// Anotação de desenvolvimento do aluno (professor / pedagoga)
+model StudentDevelopmentNote {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("DevNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdAt DateTime @default(now())
 
   @@index([studentId])
 }

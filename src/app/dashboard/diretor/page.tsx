@@ -28,7 +28,7 @@ export default async function DirectorDashboard() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <DashboardCard label="Total de alunos" value={stats.students} icon="GraduationCap" tone="brand" />
         <DashboardCard label="Total de professores" value={stats.teachers} icon="Presentation" tone="amber" />
         <DashboardCard label="Total de turmas" value={stats.classes} icon="School" tone="emerald" />
@@ -38,6 +38,13 @@ export default async function DirectorDashboard() {
           hint="Ano letivo corrente"
           icon="Target"
           tone="violet"
+        />
+        <DashboardCard
+          label="Frequência média"
+          value={stats.attendanceRate !== null ? `${stats.attendanceRate}%` : "—"}
+          hint="Presença geral da escola"
+          icon="CalendarCheck"
+          tone="sky"
         />
       </div>
 

@@ -18,7 +18,11 @@ export default async function AtividadesPage() {
       where: { teacherId: profile.teacherId },
       orderBy: { createdAt: "desc" },
       take: 12,
-      include: { class: { select: { name: true } }, subject: { select: { name: true } } },
+      include: {
+        class: { select: { name: true } },
+        subject: { select: { name: true } },
+        attachments: { select: { id: true, type: true, title: true, url: true } },
+      },
     }),
   ]);
 
@@ -39,6 +43,8 @@ export default async function AtividadesPage() {
           className: a.class.name,
           subject: a.subject?.name ?? null,
           dueDate: a.dueDate ? a.dueDate.toISOString() : null,
+          adapted: a.adapted,
+          attachments: a.attachments.map((at) => ({ id: at.id, type: at.type as string, title: at.title, url: at.url })),
         }))}
       />
     </div>

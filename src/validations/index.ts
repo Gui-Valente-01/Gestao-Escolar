@@ -171,6 +171,14 @@ export const attendanceBatchSchema = z.object({
 // Atividades, comunicados, ocorrências, acompanhamento
 // ----------------------------------------------------------------------------
 
+export const AttachmentTypeEnum = z.enum(["LINK", "IMAGE", "VIDEO", "PDF"]);
+
+export const activityAttachmentSchema = z.object({
+  type: AttachmentTypeEnum,
+  title: z.string().optional().or(z.literal("")),
+  url: z.string().url("Informe uma URL válida (começando com http)"),
+});
+
 export const activitySchema = z.object({
   title: z.string().min(2, "Título obrigatório"),
   description: z.string().optional().or(z.literal("")),
@@ -178,6 +186,9 @@ export const activitySchema = z.object({
   dueDate: z.string().optional().or(z.literal("")),
   classId: z.string().min(1, "Selecione a turma"),
   subjectId: z.string().optional().or(z.literal("")),
+  adapted: z.coerce.boolean().optional().default(false),
+  adaptationNotes: z.string().optional().or(z.literal("")),
+  attachments: z.array(activityAttachmentSchema).optional().default([]),
 });
 
 export const announcementSchema = z.object({
@@ -218,6 +229,34 @@ export const followUpSchema = z.object({
 // ----------------------------------------------------------------------------
 
 export const InvoiceStatusEnum = z.enum(["PENDENTE", "PAGO", "ATRASADO", "CANCELADO"]);
+
+export const SupportNeedTypeEnum = z.enum([
+  "TDAH",
+  "TEA",
+  "DISLEXIA",
+  "DISCALCULIA",
+  "DEFICIENCIA_INTELECTUAL",
+  "DEFICIENCIA_FISICA",
+  "DEFICIENCIA_VISUAL",
+  "DEFICIENCIA_AUDITIVA",
+  "ALTAS_HABILIDADES",
+  "TRANSTORNO_APRENDIZAGEM",
+  "OUTRO",
+]);
+
+export const supportNeedSchema = z.object({
+  studentId: z.string().min(1, "Selecione o aluno"),
+  type: SupportNeedTypeEnum,
+  description: z.string().min(3, "Descreva o laudo/necessidade"),
+  observations: z.string().optional().or(z.literal("")),
+  documentUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  active: z.boolean().default(true),
+});
+
+export const developmentNoteSchema = z.object({
+  studentId: z.string().min(1, "Selecione o aluno"),
+  content: z.string().min(3, "Escreva a anotação"),
+});
 
 export const invoiceSchema = z.object({
   studentId: z.string().min(1, "Selecione o aluno"),
@@ -276,4 +315,7 @@ export type OccurrenceInput = z.infer<typeof occurrenceSchema>;
 export type FollowUpInput = z.infer<typeof followUpSchema>;
 export type EventInput = z.infer<typeof eventSchema>;
 export type InvoiceInput = z.infer<typeof invoiceSchema>;
+export type SupportNeedInput = z.infer<typeof supportNeedSchema>;
+export type DevelopmentNoteInput = z.infer<typeof developmentNoteSchema>;
+export type ActivityAttachmentInput = z.infer<typeof activityAttachmentSchema>;
 export type SchoolReportInput = z.infer<typeof schoolReportSchema>;

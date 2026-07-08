@@ -130,6 +130,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   PEDAGOGA: [
     ...NAV_COMMON,
     { label: "Painel pedagógico", href: "/dashboard/pedagoga", icon: "HeartHandshake" },
+    { label: "Fichas dos alunos", href: "/dashboard/pedagoga/alunos", icon: "UserRound" },
     { label: "Acompanhamentos", href: "/dashboard/pedagoga/acompanhamentos", icon: "ClipboardList" },
     NAV_CALENDAR,
     NAV_MESSAGES,
@@ -138,6 +139,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   PROFESSOR: [
     ...NAV_COMMON,
     { label: "Painel do professor", href: "/dashboard/professor", icon: "Presentation" },
+    { label: "Meus alunos", href: "/dashboard/professor/alunos", icon: "Users" },
     { label: "Notas", href: "/dashboard/professor/notas", icon: "PencilLine" },
     { label: "Frequência", href: "/dashboard/professor/frequencia", icon: "CalendarCheck" },
     { label: "Atividades", href: "/dashboard/professor/atividades", icon: "FileText" },

@@ -4,20 +4,32 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, Megaphone, Plus } from "lucide-react";
+import { FileText, Megaphone, Paperclip, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { activitySchema, type ActivityInput } from "@/validations";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { FormInput, FormTextarea } from "@/components/forms/FormInput";
 import { SelectInput } from "@/components/forms/SelectInput";
 import { formatDate, humanizeEnum } from "@/lib/utils";
+import { ATTACHMENT_TYPE_LABELS } from "@/lib/support-labels";
 import { createActivity, createAnnouncement } from "../actions";
 
 interface Assignment { classId: string; className: string; subjectId: string; subjectName: string }
-interface ActivityRow { id: string; title: string; type: string; className: string; subject: string | null; dueDate: string | null }
+interface Attachment { id: string; type: string; title: string | null; url: string }
+interface ActivityRow {
+  id: string;
+  title: string;
+  type: string;
+  className: string;
+  subject: string | null;
+  dueDate: string | null;
+  adapted: boolean;
+  attachments: Attachment[];
+}
 
 const TYPES = ["TAREFA", "PROVA", "TRABALHO", "RECUPERACAO", "PLANO_AULA"];
 const AUDIENCES = ["TODOS", "TURMA", "ALUNOS", "RESPONSAVEIS"];
+const ATTACH_TYPES = ["LINK", "IMAGE", "VIDEO", "PDF"];
 
 export function AtividadesManager({
   assignments,
@@ -40,16 +52,32 @@ export function AtividadesManager({
     watch,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ActivityInput>({ resolver: zodResolver(activitySchema), defaultValues: { type: "TAREFA" } });
+  } = useForm<ActivityInput>({ resolver: zodResolver(activitySchema), defaultValues: { type: "TAREFA", adapted: false } });
   const [activityError, setActivityError] = useState<string | null>(null);
   const selectedClass = watch("classId");
+  const isAdapted = watch("adapted");
   const subjectsForClass = assignments.filter((a) => a.classId === selectedClass);
+
+  // Anexos (link/imagem/vídeo/pdf) — gerenciados fora do RHF
+  const [attachments, setAttachments] = useState<{ type: string; title: string; url: string }[]>([]);
+  const [attType, setAttType] = useState("LINK");
+  const [attTitle, setAttTitle] = useState("");
+  const [attUrl, setAttUrl] = useState("");
+
+  function addAttachment() {
+    if (!attUrl.trim()) return;
+    setAttachments((prev) => [...prev, { type: attType, title: attTitle.trim(), url: attUrl.trim() }]);
+    setAttTitle("");
+    setAttUrl("");
+    setAttType("LINK");
+  }
 
   async function onCreateActivity(values: ActivityInput) {
     setActivityError(null);
-    const res = await createActivity(values);
+    const res = await createActivity({ ...values, attachments });
     if (!res.ok) return setActivityError(res.error);
-    reset({ title: "", description: "", type: "TAREFA", dueDate: "", classId: "", subjectId: "" });
+    reset({ title: "", description: "", type: "TAREFA", dueDate: "", classId: "", subjectId: "", adapted: false, adaptationNotes: "" });
+    setAttachments([]);
     router.refresh();
   }
 
@@ -98,6 +126,53 @@ export function AtividadesManager({
             <SelectInput label="Turma" placeholder="Selecione" options={classes.map((c) => ({ value: c.id, label: c.name }))} error={errors.classId?.message} {...register("classId")} />
             <SelectInput label="Disciplina" placeholder="Opcional" options={subjectsForClass.map((s) => ({ value: s.subjectId, label: s.subjectName }))} error={errors.subjectId?.message} {...register("subjectId")} />
           </div>
+
+          {/* Anexos */}
+          <div className="rounded-xl border border-slate-200 p-3 dark:border-white/10">
+            <p className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <Paperclip className="h-4 w-4" /> Anexos e links (imagem, vídeo, PDF ou link)
+            </p>
+            {attachments.length > 0 && (
+              <ul className="mb-2 space-y-1">
+                {attachments.map((a, i) => (
+                  <li key={i} className="flex items-center justify-between rounded-lg bg-slate-50 px-2 py-1 text-xs dark:bg-white/5">
+                    <span className="truncate text-slate-600 dark:text-slate-300">
+                      <Badge tone="brand">{ATTACHMENT_TYPE_LABELS[a.type] ?? a.type}</Badge> {a.title || a.url}
+                    </span>
+                    <button type="button" onClick={() => setAttachments((p) => p.filter((_, idx) => idx !== i))} className="text-slate-400 hover:text-red-500">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="grid gap-2 sm:grid-cols-[7rem_1fr]">
+              <select value={attType} onChange={(e) => setAttType(e.target.value)} className="input-base h-9 text-sm">
+                {ATTACH_TYPES.map((t) => <option key={t} value={t}>{ATTACHMENT_TYPE_LABELS[t]}</option>)}
+              </select>
+              <input value={attTitle} onChange={(e) => setAttTitle(e.target.value)} placeholder="Título (opcional)" className="input-base h-9 text-sm" />
+            </div>
+            <div className="mt-2 flex gap-2">
+              <input value={attUrl} onChange={(e) => setAttUrl(e.target.value)} placeholder="https://..." className="input-base h-9 text-sm" />
+              <Button type="button" size="sm" variant="secondary" onClick={addAttachment} disabled={!attUrl.trim()}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Atividade adaptada */}
+          <div className="rounded-xl border border-slate-200 p-3 dark:border-white/10">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <input type="checkbox" className="h-4 w-4 rounded border-slate-300" {...register("adapted")} />
+              <Sparkles className="h-4 w-4 text-violet-500" /> Atividade adaptada (alunos com necessidades especiais)
+            </label>
+            {isAdapted && (
+              <div className="mt-2">
+                <FormTextarea placeholder="Descreva as adaptações (ex: tempo estendido, material ampliado, apoio de mediador)..." error={errors.adaptationNotes?.message} {...register("adaptationNotes")} />
+              </div>
+            )}
+          </div>
+
           {activityError && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-600">{activityError}</p>}
           <Button type="submit" loading={isSubmitting}><Plus className="h-4 w-4" /> Criar atividade</Button>
         </form>
@@ -107,12 +182,26 @@ export function AtividadesManager({
           <ul className="space-y-2">
             {activities.length === 0 && <li className="text-sm text-slate-400">Nenhuma atividade criada.</li>}
             {activities.map((a) => (
-              <li key={a.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 dark:bg-white/5">
-                <div>
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{a.title}</p>
-                  <p className="text-xs text-slate-400">{a.className} · {a.subject ?? "Geral"} · entrega {formatDate(a.dueDate)}</p>
+              <li key={a.id} className="rounded-xl bg-slate-50 px-3 py-2 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                      {a.title}
+                      {a.adapted && <Badge tone="violet">Adaptada</Badge>}
+                    </p>
+                    <p className="text-xs text-slate-400">{a.className} · {a.subject ?? "Geral"} · entrega {formatDate(a.dueDate)}</p>
+                  </div>
+                  <Badge tone="brand">{humanizeEnum(a.type)}</Badge>
                 </div>
-                <Badge tone="brand">{humanizeEnum(a.type)}</Badge>
+                {a.attachments.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {a.attachments.map((at) => (
+                      <a key={at.id} href={at.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-0.5 text-[11px] text-brand-600 ring-1 ring-slate-200 hover:underline dark:bg-white/10 dark:ring-white/10">
+                        <Paperclip className="h-3 w-3" /> {at.title || ATTACHMENT_TYPE_LABELS[at.type] || "Anexo"}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

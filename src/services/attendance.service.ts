@@ -25,6 +25,16 @@ export async function getStudentAbsences(studentId: string): Promise<number> {
   return prisma.attendance.count({ where: { studentId, present: false } });
 }
 
+/** Taxa média de frequência de toda a escola (% de presença). */
+export async function getSchoolAttendanceRate(): Promise<number | null> {
+  const [total, absences] = await Promise.all([
+    prisma.attendance.count(),
+    prisma.attendance.count({ where: { present: false } }),
+  ]);
+  if (total === 0) return null;
+  return Math.round(((total - absences) / total) * 100);
+}
+
 /** Alunos com mais faltas que o limite informado. */
 export async function getStudentsWithManyAbsences(threshold = 4, limit = 10) {
   const grouped = await prisma.attendance.groupBy({

@@ -115,7 +115,7 @@ export async function createActivity(input: unknown): Promise<ActionResult> {
 
   const parsed = activitySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Dados inválidos", fieldErrors: parsed.error.flatten().fieldErrors };
-  const { title, description, type, dueDate, classId, subjectId } = parsed.data;
+  const { title, description, type, dueDate, classId, subjectId, adapted, adaptationNotes, attachments } = parsed.data;
 
   const allowed = await teacherCanManage(teacher.id, classId, subjectId || undefined);
   if (allowed === false) return { ok: false, error: "Você não leciona nesta turma." };
@@ -129,6 +129,12 @@ export async function createActivity(input: unknown): Promise<ActionResult> {
       classId,
       subjectId: subjectId || null,
       teacherId: teacher.id,
+      adapted: adapted ?? false,
+      adaptationNotes: adaptationNotes?.trim() || null,
+      attachments:
+        attachments && attachments.length
+          ? { create: attachments.map((a) => ({ type: a.type, title: a.title?.trim() || null, url: a.url })) }
+          : undefined,
     },
   });
   await logAction({ userId: teacher.userId, action: "activity.create", entity: "Activity" });

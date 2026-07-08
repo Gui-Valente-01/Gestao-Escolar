@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth";
 import { followUpSchema, occurrenceSchema } from "@/validations";
 import { logAction } from "@/lib/audit";
+import { notifyOccurrence } from "@/services/notification.service";
+import { humanizeEnum } from "@/lib/utils";
 import type { ActionResult } from "@/types";
 
 export async function createFollowUp(input: unknown): Promise<ActionResult> {
@@ -47,7 +49,15 @@ export async function registerOccurrence(input: unknown): Promise<ActionResult> 
   await prisma.occurrence.create({
     data: { studentId, reportedById: user.id, type, severity, description },
   });
+
+  // Notifica o responsável do aluno (se houver)
+  try {
+    await notifyOccurrence(studentId, `${humanizeEnum(type)} — ${description}`);
+  } catch (err) {
+    console.error("[notification] falha ao notificar ocorrência:", err);
+  }
+
   await logAction({ userId: user.id, action: "occurrence.create", entity: "Occurrence", metadata: { studentId } });
   revalidatePath("/dashboard/pedagoga/acompanhamentos");
-  return { ok: true, message: "Ocorrência registrada." };
+  return { ok: true, message: "Ocorrência registrada. Responsável notificado." };
 }

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { average, currentYear } from "@/lib/utils";
 import { ALL_ROLES, ROLE_LABELS } from "@/lib/permissions";
 import { getSchoolAverage, getAveragesByClass } from "./grade.service";
-import { getStudentsWithManyAbsences } from "./attendance.service";
+import { getStudentsWithManyAbsences, getSchoolAttendanceRate } from "./attendance.service";
 
 // ----------------------------------------------------------------------------
 // Administrador
@@ -63,7 +63,7 @@ export async function getStudentsAtRisk(maxAverage = 6, year = currentYear()) {
 // ----------------------------------------------------------------------------
 
 export async function getDirectorStats(year = currentYear()) {
-  const [students, teachers, classes, schoolAverage, averagesByClass, atRisk, manyAbsences] =
+  const [students, teachers, classes, schoolAverage, averagesByClass, atRisk, manyAbsences, attendanceRate] =
     await Promise.all([
       prisma.student.count(),
       prisma.teacher.count(),
@@ -72,6 +72,7 @@ export async function getDirectorStats(year = currentYear()) {
       getAveragesByClass(year),
       getStudentsAtRisk(6, year),
       getStudentsWithManyAbsences(4),
+      getSchoolAttendanceRate(),
     ]);
 
   const lowClasses = [...averagesByClass]
@@ -84,6 +85,7 @@ export async function getDirectorStats(year = currentYear()) {
     teachers,
     classes,
     schoolAverage,
+    attendanceRate,
     averagesByClass,
     lowClasses,
     atRisk,
