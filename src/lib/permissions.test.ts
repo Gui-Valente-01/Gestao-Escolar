@@ -28,4 +28,13 @@ describe("permissions", () => {
     expect(NAV_BY_ROLE.PROFESSOR[0]).toMatchObject({ label: "Visão geral", href: ROLE_HOME.PROFESSOR });
     expect(Object.values(NAV_BY_ROLE).flat().some((item) => item.href === "/dashboard")).toBe(false);
   });
+  it("remove financeiro da navegacao e das permissoes", () => {
+    const navItems = Object.values(NAV_BY_ROLE).flat();
+    expect(navItems.some((item) => item.href === "/dashboard/financeiro")).toBe(false);
+    expect(PERMISSIONS.manageFinance("ADMIN")).toBe(false);
+    expect(PERMISSIONS.manageFinance("DIRETOR")).toBe(false);
+    expect(PERMISSIONS.manageFinance("RESPONSAVEL")).toBe(false);
+    expect(canAccessRoute("ADMIN", "/dashboard/financeiro")).toBe(false);
+    expect(canAccessRoute("RESPONSAVEL", "/dashboard/financeiro")).toBe(false);
+  });
 });
