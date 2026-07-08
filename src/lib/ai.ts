@@ -118,7 +118,13 @@ interface CallOptions {
 const AI_TIMEOUT_MS = 45_000;
 
 export function isAiConfigured(): boolean {
-  return Boolean(process.env.AI_API_KEY && process.env.AI_API_KEY.length > 8);
+  const provider = (process.env.AI_PROVIDER || "openai").toLowerCase();
+  const key =
+    provider === "gemini"
+      ? process.env.AI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+      : process.env.AI_API_KEY;
+
+  return Boolean(key && key.length > 8);
 }
 
 /**
@@ -128,10 +134,15 @@ export function isAiConfigured(): boolean {
  * Sem chave configurada, retorna uma resposta de fallback informativa.
  */
 export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
-  const provider = process.env.AI_PROVIDER || "openai";
-  const model = process.env.AI_MODEL || "gpt-4o-mini";
-  const baseUrl = process.env.AI_BASE_URL || "https://api.openai.com/v1";
-  const apiKey = process.env.AI_API_KEY || "";
+  const provider = (process.env.AI_PROVIDER || "openai").toLowerCase();
+  const model = process.env.AI_MODEL || (provider === "gemini" ? "gemini-2.5-flash" : "gpt-4o-mini");
+  const baseUrl =
+    process.env.AI_BASE_URL ||
+    (provider === "gemini" ? "https://generativelanguage.googleapis.com/v1beta" : "https://api.openai.com/v1");
+  const apiKey =
+    provider === "gemini"
+      ? process.env.AI_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || ""
+      : process.env.AI_API_KEY || "";
   const maxTokens = Number(process.env.AI_MAX_TOKENS || 1200);
 
   if (!isAiConfigured()) {
@@ -146,6 +157,34 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
   const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
   try {
+    if (provider === "gemini") {
+      const modelPath = model.startsWith("models/") ? model : `models/${model}`;
+      const url = new URL(`${baseUrl.replace(/\/$/, "")}/${modelPath}:generateContent`);
+      url.searchParams.set("key", apiKey);
+
+      const res = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: "user", parts: [{ text: user }] }],
+          generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: maxTokens,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error(`IA respondeu ${res.status}: ${await res.text()}`);
+      const data = await res.json();
+      const answer = extractGeminiText(data);
+      if (!answer) {
+        const reason = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason;
+        throw new Error(reason ? `Gemini sem texto de resposta (${reason})` : "Gemini sem texto de resposta.");
+      }
+      return { answer, model, provider };
+    }
+
     if (provider === "anthropic") {
       const res = await fetch(`${baseUrl.replace(/\/$/, "")}/messages`, {
         method: "POST",
@@ -195,6 +234,21 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
   }
 }
 
+function extractGeminiText(data: unknown): string {
+  if (!data || typeof data !== "object") return "";
+  const candidates = (data as { candidates?: unknown }).candidates;
+  if (!Array.isArray(candidates)) return "";
+
+  return candidates
+    .flatMap((candidate) => {
+      const parts = (candidate as { content?: { parts?: unknown } })?.content?.parts;
+      return Array.isArray(parts) ? parts : [];
+    })
+    .map((part) => (typeof (part as { text?: unknown })?.text === "string" ? (part as { text: string }).text : ""))
+    .join("")
+    .trim();
+}
+
 /**
  * Resposta usada quando nenhuma chave de IA está configurada.
  * Mantém o produto funcional para demonstração, ecoando o contexto recebido.
@@ -202,7 +256,7 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
 function buildFallbackAnswer(userPrompt: string): string {
   return [
     "⚠️ **IA em modo demonstração** — nenhuma chave foi configurada.",
-    "Defina `AI_API_KEY`, `AI_BASE_URL` e `AI_MODEL` no arquivo `.env` para ativar as respostas reais do modelo.",
+    "Defina `AI_PROVIDER`, `AI_API_KEY` (ou `GEMINI_API_KEY` para Gemini), `AI_BASE_URL` e `AI_MODEL` no arquivo `.env` para ativar as respostas reais do modelo.",
     "",
     "Enquanto isso, este é o contexto real coletado do banco de dados que seria enviado ao agente:",
     "",

@@ -89,12 +89,16 @@ A IA é **opcional** e configurável por variáveis de ambiente. Sem chave, o si
 **modo demonstração** (mostra o contexto real coletado do banco). Para ativar respostas reais:
 
 ```env
-AI_PROVIDER="openai"                       # "openai" (compatível) ou "anthropic"
-AI_API_KEY="sua-chave"
-AI_BASE_URL="https://api.openai.com/v1"    # funciona com OpenRouter, Groq, Ollama, etc.
-AI_MODEL="gpt-4o-mini"
+AI_PROVIDER="gemini"                       # "gemini", "openai" ou "anthropic"
+AI_API_KEY="sua-chave-do-google-ai-studio" # também aceita GEMINI_API_KEY ou GOOGLE_API_KEY
+AI_BASE_URL="https://generativelanguage.googleapis.com/v1beta"
+AI_MODEL="gemini-2.5-flash"
 AI_MAX_TOKENS="1200"
 ```
+
+Para Gemini, gere a chave no Google AI Studio e reinicie o servidor depois de salvar o `.env`.
+Se quiser usar OpenAI/OpenRouter/Groq/Ollama, troque `AI_PROVIDER`, `AI_BASE_URL` e `AI_MODEL`
+para o endpoint compatível com Chat Completions.
 
 A chave **nunca** é exposta no front-end: as chamadas passam pelos endpoints
 `/api/ai/[agent]` no servidor, que montam o contexto a partir do banco e persistem o histórico.
