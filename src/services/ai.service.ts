@@ -179,14 +179,21 @@ export async function generateAgentResponse(params: {
   agentType: AgentType;
   message: string;
   studentId?: string;
+  history?: { role: "user" | "assistant"; content: string }[];
 }) {
-  const { profile, agentType, message, studentId } = params;
+  const { profile, agentType, message, studentId, history = [] } = params;
   const agent = AGENTS[agentType];
 
   const context = await buildContext(agentType, profile, studentId);
   const userPrompt = `${context}\n\n---\nPERGUNTA DO USUÁRIO:\n${message}`;
 
-  const result = await callAi({ system: agent.systemPrompt, user: userPrompt });
+  // Mantém as últimas trocas para dar continuidade à conversa (memória multi-turno)
+  const trimmedHistory = history.slice(-10);
+  const system =
+    agent.systemPrompt +
+    "\n\nVocê está em uma conversa contínua: use o histórico para dar seguimento, aprofundar e refinar as respostas anteriores. " +
+    "Seja proativo — ao final, ofereça próximos passos ou pergunte se o usuário quer que você detalhe, gere um documento ou monte um plano.";
+  const result = await callAi({ system, user: userPrompt, history: trimmedHistory });
 
   await prisma.aiInteraction.create({
     data: {

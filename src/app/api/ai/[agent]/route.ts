@@ -45,6 +45,7 @@ export async function POST(req: Request, { params }: { params: { agent: string }
       agentType,
       message: parsed.data.message,
       studentId: parsed.data.studentId || undefined,
+      history: parsed.data.history,
     });
 
     await logAction({

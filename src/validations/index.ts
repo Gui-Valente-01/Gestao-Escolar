@@ -274,6 +274,10 @@ export const messageSchema = z.object({
 export const aiAskSchema = z.object({
   message: z.string().min(2, "Escreva uma pergunta"),
   studentId: z.string().optional().or(z.literal("")),
+  history: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(8000) }))
+    .max(20)
+    .optional(),
 });
 
 export const schoolReportSchema = z

@@ -110,9 +110,15 @@ export interface AiResult {
   provider: string;
 }
 
+export interface AiTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface CallOptions {
   system: string;
   user: string;
+  history?: AiTurn[];
 }
 
 const AI_TIMEOUT_MS = 45_000;
@@ -133,7 +139,7 @@ export function isAiConfigured(): boolean {
  * e também com a API de Mensagens da Anthropic (AI_PROVIDER=anthropic).
  * Sem chave configurada, retorna uma resposta de fallback informativa.
  */
-export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
+export async function callAi({ system, user, history = [] }: CallOptions): Promise<AiResult> {
   const provider = (process.env.AI_PROVIDER || "openai").toLowerCase();
   const model = process.env.AI_MODEL || (provider === "gemini" ? "gemini-2.5-flash" : "gpt-4o-mini");
   const baseUrl =
@@ -168,7 +174,10 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: system }] },
-          contents: [{ role: "user", parts: [{ text: user }] }],
+          contents: [
+            ...history.map((h) => ({ role: h.role === "assistant" ? "model" : "user", parts: [{ text: h.content }] })),
+            { role: "user", parts: [{ text: user }] },
+          ],
           generationConfig: {
             temperature: 0.4,
             maxOutputTokens: maxTokens,
@@ -198,7 +207,7 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
           model,
           max_tokens: maxTokens,
           system,
-          messages: [{ role: "user", content: user }],
+          messages: [...history.map((h) => ({ role: h.role, content: h.content })), { role: "user", content: user }],
         }),
       });
       if (!res.ok) throw new Error(`IA respondeu ${res.status}: ${await res.text()}`);
@@ -221,6 +230,7 @@ export async function callAi({ system, user }: CallOptions): Promise<AiResult> {
         temperature: 0.4,
         messages: [
           { role: "system", content: system },
+          ...history.map((h) => ({ role: h.role, content: h.content })),
           { role: "user", content: user },
         ],
       }),

@@ -46,7 +46,12 @@ export function AiChatBox({
       const res = await fetch(`/api/ai/${slug}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message, studentId: studentId || undefined }),
+        body: JSON.stringify({
+          message,
+          studentId: studentId || undefined,
+          // envia as últimas trocas para a IA manter o contexto da conversa
+          history: messages.slice(-10),
+        }),
       });
       // Lê como texto e faz parse seguro (resposta pode vir vazia em timeout)
       const raw = await res.text();
