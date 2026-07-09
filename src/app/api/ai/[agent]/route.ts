@@ -57,8 +57,10 @@ export async function POST(req: Request, { params }: { params: { agent: string }
     return NextResponse.json({ ok: true, answer: result.answer, model: result.model });
   } catch (err) {
     console.error("[ai] erro:", err);
+    // Detalhe do erro do provider (sem a chave) para facilitar o diagnóstico da configuração.
+    const detail = (err instanceof Error ? err.message : String(err)).replace(/key=[^&\s"]+/gi, "key=***").slice(0, 300);
     return NextResponse.json(
-      { ok: false, error: "Falha ao consultar a IA. Verifique a configuração do provider." },
+      { ok: false, error: "Falha ao consultar a IA. Verifique a configuração do provider.", detail },
       { status: 500 },
     );
   }
