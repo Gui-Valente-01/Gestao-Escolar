@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { RelatoriosManager } from "./RelatoriosManager";
 
+// Relatórios usam IA (pode demorar) — evita timeout de 10s na Vercel.
+export const maxDuration = 60;
+
 export default async function RelatoriosPage() {
   await requireRole(["ADMIN", "DIRETOR"]);
 

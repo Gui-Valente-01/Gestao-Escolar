@@ -5,6 +5,9 @@ import { aiAskSchema } from "@/validations";
 import { generateAgentResponse } from "@/services/ai.service";
 import { logAction } from "@/lib/audit";
 
+// Dá mais tempo para a IA responder (evita timeout de 10s do plano Hobby da Vercel).
+export const maxDuration = 60;
+
 // Endpoint dos agentes de IA:
 //   /api/ai/director | pedagogue | teacher | student | guardian
 export async function POST(req: Request, { params }: { params: { agent: string } }) {

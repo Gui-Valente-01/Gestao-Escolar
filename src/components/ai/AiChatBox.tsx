@@ -48,11 +48,24 @@ export function AiChatBox({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ message, studentId: studentId || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Falha ao consultar a IA.");
+      // Lê como texto e faz parse seguro (resposta pode vir vazia em timeout)
+      const raw = await res.text();
+      let data: { ok?: boolean; answer?: string; error?: string } | null = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
       }
-      setMessages([...next, { role: "assistant", content: data.answer }]);
+      if (!res.ok || !data?.ok) {
+        const timedOut = res.status === 504 || res.status === 408 || (!data && res.status >= 500);
+        throw new Error(
+          data?.error ||
+            (timedOut
+              ? "A IA demorou demais para responder (tempo esgotado). Tente uma pergunta mais curta ou tente novamente."
+              : `Falha ao consultar a IA (código ${res.status}).`),
+        );
+      }
+      setMessages([...next, { role: "assistant", content: data.answer ?? "Sem resposta." }]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado.");
       setMessages(next);
