@@ -16,21 +16,25 @@ import { SelectInput } from "@/components/forms/SelectInput";
 import { formatDate, cn } from "@/lib/utils";
 import { createUser, updateUser, deleteUser } from "./actions";
 
-type Row = { id: string; name: string; email: string; role: Role; active: boolean; createdAt: string };
+type Row = { id: string; name: string; email: string; role: Role; active: boolean; createdAt: string; classId: string | null };
+type Option = { id: string; name: string };
 type FormValues = {
   name: string;
   email: string;
   role: Role;
   password?: string;
   active: boolean;
+  classId?: string;
 };
 
 export function UsuariosManager({
   users,
+  classes,
   query,
   pagination,
 }: {
   users: Row[];
+  classes: Option[];
   query: string;
   pagination: { page: number; pageSize: number; total: number };
 }) {
@@ -43,20 +47,22 @@ export function UsuariosManager({
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(userSchema), defaultValues: { active: true, role: "ALUNO" } });
+  const selectedRole = watch("role");
 
   function openNew() {
     setEditing(null);
     setServerError(null);
-    reset({ name: "", email: "", role: "ALUNO", password: "", active: true });
+    reset({ name: "", email: "", role: "ALUNO", password: "", active: true, classId: "" });
     setOpen(true);
   }
 
   function openEdit(row: Row) {
     setEditing(row);
     setServerError(null);
-    reset({ name: row.name, email: row.email, role: row.role, password: "", active: row.active });
+    reset({ name: row.name, email: row.email, role: row.role, password: "", active: row.active, classId: row.classId ?? "" });
     setOpen(true);
   }
 
@@ -153,6 +159,15 @@ export function UsuariosManager({
             options={ALL_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
             {...register("role")}
           />
+          {selectedRole === "ALUNO" && (
+            <SelectInput
+              label="Turma"
+              placeholder="Selecione a turma"
+              options={classes.map((c) => ({ value: c.id, label: c.name }))}
+              error={errors.classId?.message}
+              {...register("classId")}
+            />
+          )}
           <FormInput
             label={editing ? "Nova senha (opcional)" : "Senha"}
             type="password"

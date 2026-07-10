@@ -135,7 +135,7 @@ export function AlunosManager({
             <FormInput label="Data de nascimento" type="date" error={errors.birthDate?.message} {...register("birthDate")} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <SelectInput label="Turma" placeholder="Sem turma" options={classes.map((c) => ({ value: c.id, label: c.name }))} error={errors.classId?.message} {...register("classId")} />
+            <SelectInput label="Turma" placeholder="Selecione a turma" options={classes.map((c) => ({ value: c.id, label: c.name }))} error={errors.classId?.message} {...register("classId")} />
             <SelectInput label="Responsável" placeholder="Sem responsável" options={guardians.map((g) => ({ value: g.id, label: g.name }))} error={errors.guardianId?.message} {...register("guardianId")} />
           </div>
           <FormInput

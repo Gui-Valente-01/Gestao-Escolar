@@ -81,7 +81,8 @@ export const profilePasswordSchema = z
 // Usuários / pessoas
 // ----------------------------------------------------------------------------
 
-export const userSchema = z.object({
+export const userSchema = z
+  .object({
   name: z.string().min(3, "Nome muito curto"),
   email: z.string().email("E-mail inválido"),
   role: RoleEnum,
@@ -91,7 +92,13 @@ export const userSchema = z.object({
     .optional()
     .or(z.literal("")),
   active: z.boolean().default(true),
-});
+  // Turma — usada quando o perfil é ALUNO
+  classId: z.string().optional().or(z.literal("")),
+  })
+  .refine((d) => d.role !== "ALUNO" || Boolean(d.classId?.trim()), {
+    message: "Selecione a turma",
+    path: ["classId"],
+  });
 
 export const studentSchema = z.object({
   name: z.string().min(3, "Nome muito curto"),
@@ -99,7 +106,7 @@ export const studentSchema = z.object({
   password: z.string().min(8, "Mínimo de 8 caracteres").optional().or(z.literal("")),
   registration: z.string().min(2, "Matrícula obrigatória"),
   birthDate: z.string().optional().or(z.literal("")),
-  classId: z.string().optional().or(z.literal("")),
+  classId: z.string().min(1, "Selecione a turma"),
   guardianId: z.string().optional().or(z.literal("")),
 });
 
